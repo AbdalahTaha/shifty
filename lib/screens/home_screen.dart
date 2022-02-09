@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../widgets/daily_shift.dart';
-import '../models/shift.dart';
+import '../providers/shift.dart';
 import '../widgets/current_shift.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -24,11 +25,16 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
-            Expanded(
-              child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: Shifts().shifts.length,
-                  itemBuilder: (context, i) => DailyShift(Shifts().shifts[i])),
+            Consumer<Shifts>(
+              builder: (context, shifts, child) {
+                return Expanded(
+                  child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: shifts.allShifts.length,
+                      itemBuilder: (context, i) =>
+                          DailyShift(shifts.allShifts[i])),
+                );
+              },
             ),
             CurrentShift(),
             SizedBox(height: 15),

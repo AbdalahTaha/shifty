@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
-import '../models/shift.dart';
+import '../providers/shift.dart';
+import 'package:provider/provider.dart';
 
 class CurrentShift extends StatefulWidget {
   const CurrentShift({Key? key}) : super(key: key);
@@ -28,11 +29,13 @@ class _CurrentShiftState extends State<CurrentShift> {
     if (prefs.getString('currentLogIn') == null) {
       setState(() {
         logInHighlight = Colors.lightBlueAccent;
+        logOutHighlight = Colors.transparent;
       });
     } else {
       setState(() {
         currentLogIn = DateTime.parse(prefs.getString('currentLogIn')!);
         logOutHighlight = Colors.lightBlueAccent;
+        logInHighlight = Colors.transparent;
       });
     }
   }
@@ -48,11 +51,13 @@ class _CurrentShiftState extends State<CurrentShift> {
               Text('LogIn '),
               Expanded(
                 child: Container(
-                  child: Text(currentLogIn == null
-                      ? ""
-                      : DateFormat('hh:mm aa')
-                          .format(currentLogIn!)
-                          .toString()),
+                  child: Center(
+                    child: Text(currentLogIn == null
+                        ? ""
+                        : DateFormat('hh:mm aa')
+                            .format(currentLogIn!)
+                            .toString()),
+                  ),
                   constraints: BoxConstraints(minHeight: 30),
                   decoration: BoxDecoration(
                       color: Colors.black26,
@@ -65,11 +70,13 @@ class _CurrentShiftState extends State<CurrentShift> {
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Container(
-                    child: Text(currentLogOut == null
-                        ? ""
-                        : DateFormat('hh:mm aa')
-                            .format(currentLogOut!)
-                            .toString()),
+                    child: Center(
+                      child: Text(currentLogOut == null
+                          ? ""
+                          : DateFormat('hh:mm aa')
+                              .format(currentLogOut!)
+                              .toString()),
+                    ),
                     constraints: BoxConstraints(minHeight: 30),
                     decoration: BoxDecoration(
                         color: Colors.black26,
@@ -91,15 +98,20 @@ class _CurrentShiftState extends State<CurrentShift> {
                   setState(() {
                     currentLogIn = DateTime.now();
                   });
+                  checkSharedPref();
                 } else {
+                  print("here");
                   prefs.setString(
                       'currentLogOut', DateTime.now().toIso8601String());
+                  context.read<Shifts>().addShift(Shift(
+                      login: currentLogIn!,
+                      logout: DateTime.now(),
+                      logTime: DateTime.now().difference(currentLogIn!)));
+                  prefs.clear();
                   setState(() {
-                    Shifts().addShift(Shift(
-                        login: currentLogIn!,
-                        logout: DateTime.now(),
-                        logTime: DateTime.now().difference(currentLogIn!)));
+                    currentLogIn = null;
                   });
+                  checkSharedPref();
                 }
               },
               child: Icon(

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/shift.dart';
+import '../providers/shift.dart';
 import 'package:intl/intl.dart';
 
 class DailyShift extends StatelessWidget {
