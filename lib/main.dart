@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../screens/home_screen.dart';
 import 'package:provider/provider.dart';
 import './providers/shift.dart';
+import 'package:realm/realm.dart';
 
 void main() {
   runApp(const MyApp());

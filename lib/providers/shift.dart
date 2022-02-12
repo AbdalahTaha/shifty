@@ -1,10 +1,13 @@
 import 'package:flutter/foundation.dart';
+import 'package:realm/realm.dart';
+part 'shift.g.dart';
 
-class Shift {
-  final DateTime login;
-  final DateTime logout;
-  final Duration logTime;
-  Shift({required this.login, required this.logout, required this.logTime});
+@RealmModel()
+class _Shift {
+  late final DateTime login;
+  late final DateTime logout;
+  // late Duration logTime;
+  // Shift({required this.login, required this.logout, required this.logTime});
 }
 
 class Shifts extends ChangeNotifier {
@@ -19,10 +22,7 @@ class Shifts extends ChangeNotifier {
   }
 
   addShift(Shift newShift) {
-    print("shift added");
-    print(newShift.logTime);
     _shifts.add(newShift);
-    print(_shifts.length);
     notifyListeners();
   }
 }

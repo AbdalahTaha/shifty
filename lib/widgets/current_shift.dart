@@ -104,9 +104,9 @@ class _CurrentShiftState extends State<CurrentShift> {
                   prefs.setString(
                       'currentLogOut', DateTime.now().toIso8601String());
                   context.read<Shifts>().addShift(Shift(
-                      login: currentLogIn!,
-                      logout: DateTime.now(),
-                      logTime: DateTime.now().difference(currentLogIn!)));
+                        currentLogIn!,
+                        DateTime.now(),
+                      ));
                   prefs.clear();
                   setState(() {
                     currentLogIn = null;
