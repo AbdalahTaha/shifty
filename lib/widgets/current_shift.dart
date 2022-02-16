@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import '../providers/shift.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_time_picker_spinner/flutter_time_picker_spinner.dart';
 
 class CurrentShift extends StatefulWidget {
   const CurrentShift({Key? key}) : super(key: key);
@@ -48,39 +49,158 @@ class _CurrentShiftState extends State<CurrentShift> {
           padding: const EdgeInsets.all(8.0),
           child: Row(
             children: [
-              Text('LogIn '),
+              const Text('LogIn '),
               Expanded(
-                child: Container(
-                  child: Center(
-                    child: Text(currentLogIn == null
-                        ? ""
-                        : DateFormat('hh:mm aa')
-                            .format(currentLogIn!)
-                            .toString()),
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      logInHighlight = Colors.lightBlueAccent;
+                      logOutHighlight = Colors.transparent;
+                    });
+                    showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          DateTime _dateTime = DateTime.now();
+                          return Dialog(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Align(
+                                  alignment: Alignment.topRight,
+                                  child: IconButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                      },
+                                      icon: Icon(Icons.close)),
+                                ),
+                                TimePickerSpinner(
+                                  is24HourMode: false,
+                                  normalTextStyle: const TextStyle(
+                                      fontSize: 24, color: Colors.white38),
+                                  highlightedTextStyle: const TextStyle(
+                                      fontSize: 24, color: Colors.white),
+                                  spacing: 50,
+                                  itemHeight: 60,
+                                  isForce2Digits: true,
+                                  onTimeChange: (time) {
+                                    _dateTime = time;
+                                  },
+                                ),
+                                ElevatedButton(
+                                    onPressed: () async {
+                                      final prefs =
+                                          await SharedPreferences.getInstance();
+                                      prefs.setString('currentLogIn',
+                                          _dateTime.toIso8601String());
+                                      setState(() {
+                                        currentLogIn = _dateTime;
+                                      });
+                                      checkSharedPref();
+                                      Navigator.pop(context);
+                                    },
+                                    child: const Text('Save')),
+                              ],
+                            ),
+                          );
+                        });
+                  },
+                  child: Container(
+                    child: Center(
+                      child: Text(currentLogIn == null
+                          ? ""
+                          : DateFormat('hh:mm aa')
+                              .format(currentLogIn!)
+                              .toString()),
+                    ),
+                    constraints: const BoxConstraints(minHeight: 30),
+                    decoration: BoxDecoration(
+                        color: Colors.black26,
+                        border: Border.all(color: logInHighlight)),
                   ),
-                  constraints: BoxConstraints(minHeight: 30),
-                  decoration: BoxDecoration(
-                      color: Colors.black26,
-                      border: Border.all(color: logInHighlight)),
                 ),
               ),
-              SizedBox(width: 20),
-              Text('LogOut '),
+              const SizedBox(width: 20),
+              const Text('LogOut '),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Container(
-                    child: Center(
-                      child: Text(currentLogOut == null
-                          ? ""
-                          : DateFormat('hh:mm aa')
-                              .format(currentLogOut!)
-                              .toString()),
+                  child: GestureDetector(
+                    onTap: currentLogIn == null
+                        ? null
+                        : () {
+                            setState(() {
+                              logInHighlight = Colors.transparent;
+                              logOutHighlight = Colors.lightBlueAccent;
+                            });
+                            showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  DateTime _dateTime = DateTime.now();
+                                  return Dialog(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Align(
+                                          alignment: Alignment.topRight,
+                                          child: IconButton(
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                              },
+                                              icon: Icon(Icons.close)),
+                                        ),
+                                        TimePickerSpinner(
+                                          is24HourMode: false,
+                                          normalTextStyle: const TextStyle(
+                                              fontSize: 24,
+                                              color: Colors.white38),
+                                          highlightedTextStyle: const TextStyle(
+                                              fontSize: 24,
+                                              color: Colors.white),
+                                          spacing: 50,
+                                          itemHeight: 60,
+                                          isForce2Digits: true,
+                                          onTimeChange: (time) {
+                                            _dateTime = time;
+                                          },
+                                        ),
+                                        ElevatedButton(
+                                            onPressed: () async {
+                                              final prefs =
+                                                  await SharedPreferences
+                                                      .getInstance();
+                                              checkSharedPref();
+                                              context
+                                                  .read<Shifts>()
+                                                  .addShift(Shift(
+                                                    currentLogIn!
+                                                        .toIso8601String(),
+                                                    _dateTime.toIso8601String(),
+                                                  ));
+                                              prefs.clear();
+                                              setState(() {
+                                                currentLogIn = null;
+                                              });
+                                              Navigator.pop(context);
+                                            },
+                                            child: const Text('Save')),
+                                      ],
+                                    ),
+                                  );
+                                });
+                          },
+                    child: Container(
+                      child: Center(
+                        child: Text(currentLogOut == null
+                            ? ""
+                            : DateFormat('hh:mm aa')
+                                .format(currentLogOut!)
+                                .toString()),
+                      ),
+                      constraints: const BoxConstraints(minHeight: 30),
+                      decoration: BoxDecoration(
+                          color: Colors.black26,
+                          border: Border.all(color: logOutHighlight)),
                     ),
-                    constraints: BoxConstraints(minHeight: 30),
-                    decoration: BoxDecoration(
-                        color: Colors.black26,
-                        border: Border.all(color: logOutHighlight)),
                   ),
                 ),
               ),
@@ -100,9 +220,6 @@ class _CurrentShiftState extends State<CurrentShift> {
                   });
                   checkSharedPref();
                 } else {
-                  print("here");
-                  prefs.setString(
-                      'currentLogOut', DateTime.now().toIso8601String());
                   context.read<Shifts>().addShift(Shift(
                         currentLogIn!.toIso8601String(),
                         DateTime.now().toIso8601String(),
@@ -114,7 +231,7 @@ class _CurrentShiftState extends State<CurrentShift> {
                   checkSharedPref();
                 }
               },
-              child: Icon(
+              child: const Icon(
                 Icons.fingerprint,
                 size: 40,
               )),

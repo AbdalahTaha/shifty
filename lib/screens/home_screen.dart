@@ -1,9 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../widgets/daily_shift.dart';
 import '../providers/shift.dart';
 import '../widgets/current_shift.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -13,13 +13,45 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final ScrollController _controller = ScrollController();
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    String balance = context.watch<Shifts>().calculateBalance();
+    Future.delayed(Duration.zero).whenComplete(
+        () => _controller.jumpTo(_controller.position.maxScrollExtent));
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Shifty'),
         actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.timelapse))
+          IconButton(
+              onPressed: () {
+                showDialog(
+                    context: context,
+                    builder: (BuildContext context) => AlertDialog(
+                          title: const Text("reset month?"),
+                          actions: [
+                            TextButton(
+                                onPressed: () {
+                                  context.read<Shifts>().resetMonth();
+                                  Navigator.pop(context);
+                                },
+                                child: const Text("reset")),
+                            TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                child: const Text("No")),
+                          ],
+                        ));
+              },
+              icon: const Icon(Icons.delete_forever))
         ],
       ),
       body: Padding(
@@ -27,19 +59,28 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           children: [
             Container(
-              color: Colors.lightBlue,
-              child: Text(
-                'Shift balance: ${context.watch<Shifts>().calculateBalance()}',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                ),
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              margin: const EdgeInsets.all(8.0),
+              decoration: BoxDecoration(
+                  color: balance[0] == '+' ? Colors.green : Colors.red,
+                  borderRadius: BorderRadius.circular(10)),
+              child: RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(children: <TextSpan>[
+                    const TextSpan(
+                        text: 'Shift Balance\n',
+                        style: TextStyle(color: Colors.white, fontSize: 20)),
+                    TextSpan(
+                        text: balance,
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 20))
+                  ])),
             ),
             Consumer<Shifts>(
               builder: (context, shifts, child) {
                 return Expanded(
                     child: ListView.builder(
+                  controller: _controller,
                   shrinkWrap: true,
                   itemCount: shifts.allShifts.length,
                   itemBuilder: (context, i) =>
@@ -47,8 +88,8 @@ class _HomePageState extends State<HomePage> {
                 ));
               },
             ),
-            CurrentShift(),
-            SizedBox(height: 15),
+            const CurrentShift(),
+            const SizedBox(height: 15),
           ],
         ),
       ),

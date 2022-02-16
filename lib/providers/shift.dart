@@ -6,29 +6,22 @@ part 'shift.g.dart';
 class _Shift {
   late final String login;
   late final String logout;
-  // late Duration logTime;
-  // Shift({required this.login, required this.logout, required this.logTime});
 }
 
 class Shifts extends ChangeNotifier {
-  Realm? realm;
-  List<Shift> _shifts = [
-    // Shift(
-    //     login: DateTime.now().subtract(const Duration(hours: 8)),
-    //     logout: DateTime.now(),
-    //     logTime: const Duration(hours: 8))
-  ];
+  late Realm realm;
+  List<Shift> _shifts = [];
 
   Shifts() {
-    print("here");
-
-    final config = Configuration([Shift.schema]);
-    realm = Realm(config);
-    if (realm != null && _shifts.isEmpty) {
-      print("realm is not null");
-      _shifts = realm!.all<Shift>().toList();
+    init();
+    if (_shifts.isEmpty) {
+      _shifts = realm.all<Shift>().toList();
       notifyListeners();
     }
+  }
+  init() {
+    final config = Configuration([Shift.schema]);
+    realm = Realm(config);
   }
 
   List<Shift> get allShifts {
@@ -36,12 +29,32 @@ class Shifts extends ChangeNotifier {
   }
 
   addShift(Shift newShift) {
-    print("yes");
-    _shifts.add(newShift);
-    realm!.write(() {
-      realm!.add(newShift);
+    realm.write(() {
+      realm.add(newShift);
     });
-    _shifts = realm!.all<Shift>().toList();
+    _shifts.add(newShift);
+    notifyListeners();
+  }
+
+  deleteShift(Shift shift) {
+    _shifts.remove(shift);
+    notifyListeners();
+    realm.write(() {
+      realm.delete(shift);
+    });
+  }
+
+  void resetMonth() async {
+    realm.write(() => realm.deleteMany(_shifts));
+    _shifts.clear();
+    notifyListeners();
+  }
+
+  void deleteDB() {
+    realm.close();
+    Realm.deleteRealm(realm.config.path);
+    _shifts.clear();
+    init();
     notifyListeners();
   }
 
@@ -49,11 +62,11 @@ class Shifts extends ChangeNotifier {
     Duration balance = Duration.zero;
     for (Shift shift in _shifts) {
       balance = balance +
-          DateTime.parse(shift.logout).difference(
-              DateTime.parse(shift.login).subtract(Duration(hours: 8)));
+          DateTime.parse(shift.logout).difference(DateTime.parse(shift.login)) -
+          const Duration(hours: 8);
     }
     String twoDigits(int n) => n.toString().padLeft(2, "0");
-    String twoDigitMinutes = twoDigits(balance.inMinutes.remainder(60));
-    return "${twoDigits(balance.inHours)}:$twoDigitMinutes";
+    String twoDigitMinutes = twoDigits(balance.inMinutes.abs().remainder(60));
+    return "${balance.inHours.sign >= 0 ? '+' : '-'}${twoDigits(balance.inHours.abs())}:$twoDigitMinutes";
   }
 }

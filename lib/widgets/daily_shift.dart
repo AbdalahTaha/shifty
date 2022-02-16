@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../providers/shift.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 class DailyShift extends StatelessWidget {
   final Shift shift;
@@ -10,9 +11,9 @@ class DailyShift extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        Text("Day#${index + 1}"),
-        const SizedBox(width: 30),
+        Text("Day#${(index + 1).toString().padLeft(2, "0")}"),
         Card(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
@@ -21,7 +22,6 @@ class DailyShift extends StatelessWidget {
                 .toString()),
           ),
         ),
-        const SizedBox(width: 40),
         Card(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
@@ -29,6 +29,29 @@ class DailyShift extends StatelessWidget {
                 .format(DateTime.parse(shift.logout))
                 .toString()),
           ),
+        ),
+        IconButton(
+          onPressed: () {
+            showDialog(
+                context: context,
+                builder: (BuildContext context) => AlertDialog(
+                      title: const Text("Delete Shift?"),
+                      actions: [
+                        TextButton(
+                            onPressed: () {
+                              context.read<Shifts>().deleteShift(shift);
+                              Navigator.pop(context);
+                            },
+                            child: const Text("Delete")),
+                        TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                            child: const Text("No")),
+                      ],
+                    ));
+          },
+          icon: const Icon(Icons.delete),
         )
       ],
     );
