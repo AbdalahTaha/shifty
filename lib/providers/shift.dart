@@ -67,6 +67,6 @@ class Shifts extends ChangeNotifier {
     }
     String twoDigits(int n) => n.toString().padLeft(2, "0");
     String twoDigitMinutes = twoDigits(balance.inMinutes.abs().remainder(60));
-    return "${balance.inHours.sign >= 0 ? '+' : '-'}${twoDigits(balance.inHours.abs())}:$twoDigitMinutes";
+    return "${balance.inHours.sign >= 0 && balance.inMinutes.sign >= 0 ? '+' : '-'}${twoDigits(balance.inHours.abs())}:$twoDigitMinutes";
   }
 }
